@@ -8,6 +8,8 @@ MODEL:
     NUM_CLASSES: 171
     TRAIN_CLASS_JSON: "datasets/coco.json"
     TEST_CLASS_JSON: "datasets/coco.json"
+    TRAIN_CLASS_JSON: "datasets/pastis.json"
+    TEST_CLASS_JSON: "datasets/pastis.json
     CLIP_PRETRAINED: "ViT-L/14@336px"
     PROMPT_DEPTH: 0
     PROMPT_LENGTH: 0
@@ -30,6 +32,7 @@ MODEL:
 DATASETS:
   TRAIN: ("coco_2017_train_stuff_all_sem_seg",)
   TEST: ("coco_2017_test_stuff_all_sem_seg",)
+
 SOLVER:
   IMS_PER_BATCH: 4
   BASE_LR: 0.0002
@@ -60,6 +63,7 @@ INPUT:
   SIZE_DIVISIBILITY: 384
   FORMAT: "RGB"
   DATASET_MAPPER_NAME: "mask_former_semantic"
+
 TEST:
   EVAL_PERIOD: 5000
   SLIDING_WINDOW: False

@@ -1,0 +1,95 @@
+MODEL:
+  META_ARCHITECTURE: "CATSeg"
+  PIXEL_MEAN: [0.485, 0.456, 0.406]
+  PIXEL_STD: [0.229, 0.224, 0.225]
+  SEM_SEG_HEAD:
+    NAME: "CATSegHead"
+    # IGNORE_VALUE: 255
+    # NUM_CLASSES: 171
+    NUM_CLASSES: 10 # Number of target classes in PASTIS_TARGET_NAMES
+    IGNORE_VALUE: 10 # Must match ignore_label from metadata and mapper (len(target_classes))
+    # TRAIN_CLASS_JSON: "datasets/coco.json"
+    # TEST_CLASS_JSON: "datasets/coco.json"
+    TRAIN_CLASS_JSON: "datasets/pastis.json"
+    TEST_CLASS_JSON: "datasets/pastis.json"
+    CLIP_PRETRAINED: "ViT-L/14@336px"
+    PROMPT_DEPTH: 0
+    PROMPT_LENGTH: 0
+    TEXT_GUIDANCE_DIM: 768
+    TEXT_GUIDANCE_PROJ_DIM: 128
+    APPEARANCE_GUIDANCE_DIM: 768
+    APPEARANCE_GUIDANCE_PROJ_DIM: 128
+    DECODER_DIMS: [64, 32]
+    DECODER_GUIDANCE_DIMS: [256, 128]
+    DECODER_GUIDANCE_PROJ_DIMS: [32, 16]
+    NUM_LAYERS: 4
+    NUM_HEADS: 4 # Ensure these are appropriate for the feature dimensions
+    HIDDEN_DIMS: 128 # Ensure these are appropriate for the feature dimensions
+    POOLING_SIZES: [6, 6]
+    FEATURE_RESOLUTION: [24, 24]
+    WINDOW_SIZES: 12
+    ATTENTION_TYPE: "linear"
+    CLIP_FINETUNE: "attention"
+  PROMPT_ENSEMBLE_TYPE: "imagenet"
+# DATASETS:
+#   TRAIN: ("coco_2017_train_stuff_all_sem_seg",)
+#   TEST: ("coco_2017_test_stuff_all_sem_seg",)
+DATASETS:
+  TRAIN: ("pastis_sem_seg_train",)
+  TEST: ("pastis_sem_seg_val",)
+  ROOT: "/kaggle/input/your-pastis-dataset-folder-name/"  # Path to PASTIS dataset root
+
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.0002
+  MAX_ITER: 80000
+  WARMUP_FACTOR: 1.0
+  WARMUP_ITERS: 0
+  WEIGHT_DECAY: 0.0001
+  OPTIMIZER: "ADAMW"
+  LR_SCHEDULER_NAME: "WarmupCosineLR"
+  BACKBONE_MULTIPLIER: 0.01
+  CLIP_MULTIPLIER: 0.01
+  CLIP_GRADIENTS:
+    ENABLED: True
+    CLIP_TYPE: "full_model"
+    CLIP_VALUE: 0.01
+    NORM_TYPE: 2.0
+INPUT:
+  MIN_SIZE_TRAIN: (128, ) # Set minimum size to original PASTIS height/width
+  MIN_SIZE_TRAIN_SAMPLING: "choice"
+  MIN_SIZE_TEST: 336 # Set test size to be consistent with training input to ViT
+  MAX_SIZE_TEST: 336 # Or a bit larger if allowing some flexibility, but 336 is fine for fixed size.
+  CROP:
+    ENABLED: True
+    TYPE: "absolute"
+    SIZE: (336, 336) # Crop to the size expected by the ViT backbone
+    SINGLE_CATEGORY_MAX_AREA: 1.0
+  COLOR_AUG_SSD: True
+  SIZE_DIVISIBILITY: 14 # Or a multiple of 14, e.g., 28. Check model specifics.
+  # SIZE_DIVISIBILITY is important. For ViT-L/14, input must be divisible by 14.
+  # 336 is divisible by 14 (336/14=24).
+  # If other parts of the model require divisibility by 32, ensure 336 meets that if needed, or adjust.
+  # For now, let's assume the ViT's requirement is dominant.
+  USE_CUSTOM_S2_NORM: True
+  CUSTOM_S2_NORM_FOLD_KEY: "Fold_1" # Or "Fold_2" etc., depending on the split
+  # S2_VALUE_SCALE and S2_CLIP_VALUE_MAX would be ignored if USE_CUSTOM_S2_NORM is True and stats are found
+  # MODEL.PIXEL_MEAN and MODEL.PIXEL_STD (ImageNet stats) would be applied *after* this custom S2 norm
+  # if the custom S2 norm doesn't already bring it to the expected range for ImageNet stats.
+  # If custom S2 norm results in Z-scores, you might not need further ImageNet mean/std.
+  FORMAT: "RGB"
+  # DATASET_MAPPER_NAME: "mask_former_semantic"
+  DATASET_MAPPER_NAME: "pastis_semantic" 
+
+TEST:
+  EVAL_PERIOD: 5000
+  SLIDING_WINDOW: False
+DATALOADER:
+  FILTER_EMPTY_ANNOTATIONS: True
+  NUM_WORKERS: 8
+VERSION: 2
+CUDNN_BENCHMARK: True
+
+
+
+# Your PastisDatasetMapper scales the Sentinel-2 data by s2_value_scale (default 10000.0) and clips to clip_value_max (default 1.0), resulting in image data roughly in the [0, 1.0] range before MODEL.PIXEL_MEAN and MODEL.PIXEL_STD are applied.

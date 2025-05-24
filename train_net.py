@@ -79,6 +79,9 @@ from cat_seg import (
     add_cat_seg_config,
 )
 
+# PASTIS DATASET 
+from PASTIS import PastisDatasetMapper
+from PASTIS.DatasetCatalog import register_pastis_semantic
 
 class Trainer(DefaultTrainer):
     """
@@ -115,6 +118,17 @@ class Trainer(DefaultTrainer):
                     output_dir=output_folder,
                 )
             )
+
+        # Add support for PASTIS dataset evaluation
+        if evaluator_type == "pastis_sem_seg": # Or any name you register your dataset with
+            evaluator_list.append(
+                SemSegEvaluator( # Or a custom PastisEvaluator if needed
+                    dataset_name,
+                    distributed=True,
+                    output_dir=output_folder,
+                )
+            )
+            
         if evaluator_type == "coco":
             evaluator_list.append(COCOEvaluator(dataset_name, output_dir=output_folder))
         if evaluator_type in [
@@ -159,6 +173,9 @@ class Trainer(DefaultTrainer):
         # DETR-style dataset mapper for COCO panoptic segmentation
         elif cfg.INPUT.DATASET_MAPPER_NAME == "detr_panoptic":
             mapper = DETRPanopticDatasetMapper(cfg, True)
+        # Add support for PASTIS dataset evaluation
+        elif cfg.INPUT.DATASET_MAPPER_NAME == "pastis_semantic": # Or any name you choose in your config
+            mapper = PastisDatasetMapper(cfg, True)            
         else:
             mapper = None
         return build_detection_train_loader(cfg, mapper=mapper)
@@ -291,8 +308,33 @@ def setup(args):
     return cfg
 
 
+# def main(args):
+#     cfg = setup(args)
+#     torch.set_float32_matmul_precision("high")
+#     if args.eval_only:
+#         model = Trainer.build_model(cfg)
+#         DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
+#             cfg.MODEL.WEIGHTS, resume=args.resume
+#         )
+#         res = Trainer.test(cfg, model)
+#         if cfg.TEST.AUG.ENABLED:
+#             res.update(Trainer.test_with_TTA(cfg, model))
+#         if comm.is_main_process():
+#             verify_results(cfg, res)
+#         return res
+
+#     trainer = Trainer(cfg)
+#     trainer.resume_or_load(resume=args.resume)
+#     return trainer.train()
+
 def main(args):
     cfg = setup(args)
+
+    # Register PASTIS datasets
+    register_pastis_semantic("pastis_sem_seg_train", cfg.DATASETS.ROOT, "train")
+    register_pastis_semantic("pastis_sem_seg_val", cfg.DATASETS.ROOT, "val")
+    # If you have a test split defined by FOLDER_test.txt, uncomment the line below:
+    # register_pastis_semantic("pastis_sem_seg_test", cfg.DATASETS.ROOT, "test")
     torch.set_float32_matmul_precision("high")
     if args.eval_only:
         model = Trainer.build_model(cfg)
