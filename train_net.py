@@ -304,6 +304,8 @@ def setup(args):
     # Define DATASETS.ROOT before merging from file or opts.
     # This allows the config file or command-line arguments to set its value.
     cfg.DATASETS.ROOT = ""  # Add with a default empty string value
+    # Define INPUT.USE_CUSTOM_S2_NORM before merging from file or opts.
+    cfg.INPUT.USE_CUSTOM_S2_NORM = False # Add with a default False value
 
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
