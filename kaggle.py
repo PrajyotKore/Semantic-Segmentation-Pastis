@@ -3,10 +3,10 @@ import os
 # --- Configuration for Training ---
 
 # 1. Path to your training script within the cloned CAT-Seg repo
-train_script_path = "/kaggle/working/CAT-Seg/train_net.py"
+train_script_path = "/kaggle/working/Semantic-Segmentation-Pastis/train_net.py"
 
 # 2. Path to your config file within the cloned CAT-Seg repo
-config_file_path = "/kaggle/working/CAT-Seg/configs/pastis-config.yaml"
+config_file_path = "/kaggle/working/Semantic-Segmentation-Pastis/configs/pastis-config.yaml"
 
 # 3. Path to the prepared data root directory (should match `prepare_kaggle_dataset.py`)
 # This path will be passed as DATASETS.ROOT to the training script
