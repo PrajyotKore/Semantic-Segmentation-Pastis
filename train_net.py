@@ -299,6 +299,12 @@ def setup(args):
     # for poly lr schedule
     add_deeplab_config(cfg)
     add_cat_seg_config(cfg)
+
+    
+    # Define DATASETS.ROOT before merging from file or opts.
+    # This allows the config file or command-line arguments to set its value.
+    cfg.DATASETS.ROOT = ""  # Add with a default empty string value
+
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
